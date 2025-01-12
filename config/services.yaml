@@ -1,0 +1,57 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    bank_one.base_url: "%env(BANK_ONE_BASE_URL)%"
+    bank_one.jwt: "%env(BANK_ONE_JWT)%"
+    bank_one.account_id: "%env(BANK_ONE_ACCOUNT_ID)%"
+
+    bank_two.client_id: "%env(BANK_TWO_CLIENT_ID)%"
+    bank_two.access_token: "%env(BANK_TWO_ACCESS_TOKEN)%"
+
+    some_messenger.receipts_bot_base_url: "%env(SOME_MESSENGER_RECEIPTS_BOT_BASE_URL)%"
+    some_messenger.receipts_bot_id: "%env(SOME_MESSENGER_RECEIPTS_BOT_ID)%"
+    some_messenger.receipts_bot_client_id: "%env(SOME_MESSENGER_RECEIPTS_BOT_CLIENT_ID)%"
+    some_messenger.receipts_bot_dialog_id: "%env(SOME_MESSENGER_RECEIPTS_BOT_DIALOG_ID)%"
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    GuzzleHttp\Client: ~
+
+    App\ApiClient\BankOne\Client:
+        calls:
+            - setBaseUrl: ['%bank_one.base_url%']
+            - setJWT: ['%bank_one.jwt%']
+
+    BankTwo\Client:
+        calls:
+            - setAuthToken: ['%bank_two.access_token%']
+
+    App\ApiClient\SomeMessenger\ReceiptsBotClient:
+        calls:
+            - setBaseUrl: ['%some_messenger.receipts_bot_base_url%']
+            - setBotId: ['%some_messenger.receipts_bot_id%']
+            - setClientId: ['%some_messenger.receipts_bot_client_id%']
+            - setDialogId: ['%some_messenger.receipts_bot_dialog_id%']
+
+    App\Services\ReceiptsBankOne:
+        calls:
+            - setAccountId: ['%bank_one.account_id%']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
